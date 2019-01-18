@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <script src="js/leaflet.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <link rel="stylesheet" href="css/bulma.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Blank App</title>
+</head>
+
+<body>
+    <h1 class="title">Bus location service</h1>
+
+    <div class="notification is-danger">
+        <button id="delete" class="delete is-danger"></button>
+        <p>If just boarded, click <em><strong>Entered</strong></em></p>
+        <p>If you are leaving a bus, click <em><strong>Left</strong></em></p>
+        <p>At any bus stop between two above locations, click <em><strong>Station</strong></em></p>
+    </div>
+
+    <div>
+        <label for="busNumber">Bus number: </label>
+        <input class="input is-rounded is-fullwidth" id="busNumber" type="number" placeholder="...">
+        <div class="buttons is-centered" style="padding-top: 5px;">
+            <a id="entered" class="button is-rounded is-small">Entered</a>
+            <a id="station" class="button is-rounded is-small">On Station</a>
+            <a id="left" class="button is-rounded is-small">Left</a>
+        </div>
+    </div>
+    <div id="map"></div>
+    <ul id="locations">
+    </ul>
+    <script src="cordova.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/5.7.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.7.3/firebase-database.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyD6Xs3n1VlutS44aH7hcNKCWwmX_v7gyNg",
+            authDomain: "next-bus-split.firebaseapp.com",
+            databaseURL: "https://next-bus-split.firebaseio.com",
+            projectId: "next-bus-split",
+            storageBucket: "",
+            messagingSenderId: "421345301006"
+        };
+        firebase.initializeApp(config);
+        const database = firebase.database();
+    </script>
+    <script src="js/index.js"></script>
+    <script>
+        window.onload = function () {
+            document.addEventListener('deviceready', app.init);
+        }
+    </script>
+</body>
+
+</html>

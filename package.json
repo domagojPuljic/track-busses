@@ -1,0 +1,19 @@
+{
+  "name": "com.phonegap.bus",
+  "version": "1.0.0",
+  "displayName": "bus",
+  "cordova": {
+    "platforms": [
+      "browser"
+    ],
+    "plugins": {
+      "cordova-plugin-geolocation": {},
+      "cordova-plugin-googlemaps": {}
+    }
+  },
+  "dependencies": {
+    "cordova-browser": "~5.0.4",
+    "cordova-plugin-geolocation": "~2.1.0",
+    "cordova-plugin-googlemaps": "~2.4.6"
+  }
+}
