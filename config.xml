@@ -44,5 +44,4 @@
     <platform name="android">
         <allow-intent href="market:*" />
     </platform>
-    <plugin name="cordova-plugin-googlemaps" spec="~2.4.6" />
 </widget>
