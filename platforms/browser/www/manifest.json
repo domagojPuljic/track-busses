@@ -1,11 +1,11 @@
 {
   "background_color": "#FFF",
   "display": "standalone",
-  "name": "bus",
-  "short_name": "bus",
+  "name": "Track Busses",
+  "short_name": "Track Busses",
   "version": "com.phonegap.bus",
-  "description": "Hello World sample application that responds to the deviceready event.",
-  "author": "PhoneGap Team",
+  "description": "** Track Busses **",
+  "author": "Domagoj Puljic",
   "icons": [],
   "start_url": "index.html"
 }
