@@ -1,7 +1,7 @@
 var data = {}
 var options = {
-    maximumAge: 1000,
-    timeout: 3000,
+    maximumAge: 3000,
+    timeout: 5000,
     enableHighAccuracy: true
 };
 var mymap;
@@ -90,6 +90,20 @@ var app = {
         let btn = "station";
         app.sendLocation(btn);
     },
+    enteredBus: () => {
+        newRide = true;
+        $("#entered").attr("disabled", "disabled");
+        $("#left").removeAttr("disabled")
+        let btn = "entered";
+        app.sendLocation(btn);
+    },
+    leftBus: () => {
+        let btn = "left";
+        $("#entered").removeAttr("disabled")
+        $("#left").attr("disabled", "disabled");
+        app.sendLocation(btn);
+        newRide = false;
+    },
     sendLocation: (btn) => {
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
@@ -161,17 +175,6 @@ var app = {
         d = JSON.parse(localStorage.getItem(key));
         d.push(data);
         localStorage.setItem(key, d);
-    },
-    enteredBus: () => {
-        newRide = true;
-        $("#entered").attr("disabled", "disabled");
-        let btn = "entered";
-        app.sendLocation(btn);
-    },
-    leftBus: () => {
-        let btn = "left";
-        app.sendLocation(btn);
-        newRide = false;
     },
     addToDb: (data) => {
         console.log(data)
