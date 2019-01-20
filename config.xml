@@ -11,6 +11,7 @@
     <preference name="DisallowOverscroll" value="true" />
     <preference name="android-minSdkVersion" value="14" />
     <plugin name="cordova-plugin-geolocation" source="npm" spec="~2.1.0" />
+    <plugin name="cordova-plugin-whitelist" source="npm" spec="~1.2.1" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
