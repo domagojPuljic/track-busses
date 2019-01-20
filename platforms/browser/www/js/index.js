@@ -108,6 +108,7 @@ var app = {
     },
     processButtons: (e) => {
         firstLoad = false;
+        app.checkBusId();
         let id = e.target.id;
         $("#" + id).button("loading");
         if (id == "entered") {
@@ -144,6 +145,9 @@ var app = {
         }
     },
     sendLocation: () => {
+        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, {enableHighAccuracy: true});
+    },
+    checkBusId: () => {
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
             alert("Please enter a valid bus number")
@@ -155,7 +159,6 @@ var app = {
         } else {
             dbRoute += "/seen";
         }
-        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, {enableHighAccuracy: true});
     },
     removeClass: (cls_name) => {
         let btns = app.class(cls_name);
