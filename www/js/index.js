@@ -1,15 +1,5 @@
 var data = {}
-var option1 = {
-    maximumAge: 3000,
-    timeout: 5000,
-    enableHighAccuracy: true
-};
-var option2 = {
-    maximumAge: 3000,
-    timeout: 5000,
-    enableHighAccuracy: false
-};
-var gpsOn = false;
+var firstLoad = true;
 var map, geocoder, infoWindow, directionService;
 var speed = 0;
 var newRide = false;
@@ -49,8 +39,11 @@ var fake_data2 = {
 } */
 var app = {
     init: () => {
-        $(".b").on("click", app.processButtons)
+        $(".b").on("click", app.processButtons);
+        $("#left").attr("disabled", "disabled");
         app.id("delete").addEventListener("click", app.deleteWarning);
+        alertify.defaults.theme.ok = "btn btn-outline-success";
+        alertify.defaults.theme.cancel = "btn btn-outline-danger";
     },
     id: (id) => {
         return document.getElementById(id);
@@ -73,14 +66,13 @@ var app = {
     },
     myLocation: () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, option1);
+            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, {enableHighAccuracy: true});
         } else {
             $("#loader").remove();
             $("body").innerHTML = "Geolocation is not supported by this browser."
         }
     },
     onSuccess: (position) => {
-        gpsOn = true;
         app.hasLoaded();
         app.markPosition(position.coords)
     },
@@ -90,14 +82,7 @@ var app = {
     },
     onError: () => {
         $(".b").button("reset");
-        gpsOn = false;
         app.ipApiLocation();
-    },
-    onLocError: (error) => {
-        app.networkLocation();
-    },
-    networkLocation: () => {
-        navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, option2);
     },
     ipApiLocation: () => {
         $.getJSON("http://ip-api.com/json", callback).fail(error => {
@@ -121,35 +106,56 @@ var app = {
         }
         app.hasLoaded();
     },
-    processButtons: () => {
-        let id = this.id;
+    processButtons: (e) => {
+        firstLoad = false;
+        let id = e.target.id;
         $("#" + id).button("loading");
-        if(id == "entered") {
-            newRide = true;
-            $(this).attr("disabled", "disabled");
-            $("#left").removeAttr("disabled")
-        } else if(id == "left") {
-            $("#entered").removeAttr("disabled")
-            $(this).attr("disabled", "disabled");
-            newRide = false;
+        if (id == "entered") {
+            alertify.confirm(null, function () {
+                newRide = true;
+                $("#" + id).attr("disabled", "disabled");
+                $("#left").removeAttr("disabled")
+                alertify.success('Ride started');
+                app.sendLocation();
+            }, function () {
+                alertify.error('Discarded');
+            }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>Start a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
+
+        } else if (id == "left") {
+            alertify.confirm(null, function () {
+                $("#entered").removeAttr("disabled")
+                $("#" + id).attr("disabled", "disabled");
+                newRide = false;
+                alertify.error('Ride ended');
+                app.sendLocation();
+            }, function () {
+                alertify.error('Discarded');
+            }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>End a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
+        } else {
+            alertify.confirm(null, function () {
+                alertify.success('Accepted');
+                app.sendLocation();
+            }, function () {
+                alertify.error('Discarded');
+            }).set({
+                labels: { ok: "Yes", cancel: 'Cancel' },
+                title: "<span style='font-size:15px;'>Mark this station?</span>", 'resizable': true
+            }).resizeTo('80%', 150);
         }
-        app.sendLocation(id);
     },
-    sendLocation: (btn) => {
+    sendLocation: () => {
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
-            alert("Please enter valid bus number")
+            alert("Please enter a valid bus number")
             return;
         }
-        //$("#" + btn).button("loading");
-
         dbRoute = "busses/" + busID;
         if (newRide) {
             dbRoute += "/ride";
         } else {
             dbRoute += "/seen";
         }
-        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onLocError, option1);
+        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, {enableHighAccuracy: true});
     },
     removeClass: (cls_name) => {
         let btns = app.class(cls_name);
@@ -186,15 +192,16 @@ var app = {
             'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
             'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
         app.id("locations").prepend(li);
-
         data = {
             "busID": busID,
             "lat": lat,
             "lng": lon,
             "timestamp": position.timestamp
         }
-        $("b").button("reset");
-        app.addToDb(data)
+        $(".b").button("reset");
+        if(!firstLoad) {
+            app.addToDb(data)
+        }
     },
     insertIntoLS: (key, data) => {
         d = JSON.parse(localStorage.getItem(key));
@@ -205,6 +212,7 @@ var app = {
         var ref = firebase.database().ref(dbRoute);
         var station = ref.child("arrivals").push()
         station.set(data);
+        alertify.notify('Position saved into DB', 'success', 3);
     },
     isOnline: () => {
         var connectedRef = firebase.database().ref(".info/connected");
@@ -246,8 +254,8 @@ var app = {
         el.parentNode.removeChild(el);
     },
     geocodeLatLng: (coords) => {
-        let latlng = {lat: coords.latitude, lng: coords.longitude}
-        geocoder.geocode({ 'location': latlng }, function(results, status) {
+        let latlng = { lat: coords.latitude, lng: coords.longitude }
+        geocoder.geocode({ 'location': latlng }, function (results, status) {
             if (status === 'OK') {
                 if (results[0]) {
                     map.setZoom(15);
