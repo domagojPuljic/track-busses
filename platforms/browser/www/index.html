@@ -4,36 +4,43 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <link rel="stylesheet" href="css/leaflet.css" />
-    <script src="js/leaflet.js"></script>
-    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-    <link rel="stylesheet" href="css/bulma.css">
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
     <title>Blank App</title>
 </head>
 
 <body>
-    <h1 class="title">Bus location service</h1>
-
-    <div class="notification is-danger">
-        <button id="delete" class="delete is-danger"></button>
-        <p>If just boarded, click <em><strong>Entered</strong></em></p>
-        <p>If you are leaving a bus, click <em><strong>Left</strong></em></p>
-        <p>At any bus stop between two above locations, click <em><strong>At Station</strong></em></p>
-    </div>
-
-    <div>
-        <label for="busNumber">Bus number: </label>
-        <input class="input is-rounded is-fullwidth" id="busNumber" type="number" placeholder="...">
-        <div class="buttons is-centered" style="padding-top: 5px;">
-            <a id="entered" class="button is-rounded is-small">Entered</a>
-            <a id="station" class="button is-rounded is-small">At The Station</a>
-            <a id="left" class="button is-rounded is-small">Left</a>
+    <div id="loader"></div>
+    <div id="all container-fluid">
+        <h3 class="title">Bus location service</h3>
+        <div class="alert alert-danger notification" role="alert">
+            <button id="delete" class="close">x</button>
+            <p>
+                If just boarded, click <em><strong>Entered</strong></em><br>
+                If you are leaving a bus, click <em><strong>Left</strong></em><br>
+                At any bus stop between two above locations, click <em><strong>Station</strong></em>
+            </p>
         </div>
+        <div class="row">
+            <div class="col">
+                <input id="busNumber" type="number" placeholder="Bus No.">
+            </div>
+            <div class="col">
+                <button id="entered" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Entered</button>
+            </div>
+            <div class="col">
+                <button id="station" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Station</button>
+            </div>
+            <div class="col">
+                <button id="left" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Left</button>
+            </div>
+        </div>
+        <div id="map"></div>
+        <ul id="locations"></ul>
     </div>
-    <div id="map"></div>
-    <ul id="locations">
-    </ul>
     <script src="cordova.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/5.7.3/firebase-app.js"></script>
@@ -51,10 +58,12 @@
         firebase.initializeApp(config);
         const database = firebase.database();
     </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDw6IPeiH2PhqRnMN4YX3krLrzYAYh30ZU&callback=app.initMap"
+        type="text/javascript"></script>
     <script src="js/index.js"></script>
     <script>
         window.onload = function () {
-            if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 document.addEventListener('deviceready', app.init);
             } else {
                 app.init();

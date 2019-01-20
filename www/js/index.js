@@ -1,10 +1,16 @@
 var data = {}
-var options = {
+var option1 = {
     maximumAge: 3000,
     timeout: 5000,
     enableHighAccuracy: true
 };
-var mymap;
+var option2 = {
+    maximumAge: 3000,
+    timeout: 5000,
+    enableHighAccuracy: false
+};
+var gpsOn = false;
+var map, geocoder, infoWindow, directionService;
 var speed = 0;
 var newRide = false;
 var ride = {
@@ -12,6 +18,23 @@ var ride = {
 }
 var dbRoute = "busses/";
 /* 
+var stationIcon = {
+    fillColor: '#f88',
+    fillOpacity: 0.5,
+    strokeColor: '#a65',
+    strokeOpacity: 0.9,
+    strokeWeight: 1,
+    scale: 0.2
+}
+var currentPosIcon = {
+    fillColor: '#999',
+    fillOpacity: 0.3,
+    strokeColor: '#000',
+    strokeOpacity: 0.8,
+    strokeWeight: 1,
+    scale: 0.2
+}
+
 var fake_data = {
     "busID": "1",
     "latitude": 43.5112668,
@@ -27,10 +50,10 @@ var fake_data2 = {
 var app = {
     init: () => {
         app.id("station").addEventListener("click", app.atStation);
+        $(".b").on("click", app.processButtons)
         app.id("entered").addEventListener("click", app.enteredBus);
         app.id("left").addEventListener("click", app.leftBus);
         app.id("delete").addEventListener("click", app.deleteWarning);
-        app.initialLocation();
     },
     id: (id) => {
         return document.getElementById(id);
@@ -38,36 +61,54 @@ var app = {
     class: (cl) => {
         return document.getElementsByClassName(cl);
     },
-    initMap: (lat, lng) => {
-        mymap = L.map('map').setView([lat, lng], 13);
-        mymap.setZoom(17);
-        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZG9tYWdvanB1bGppYyIsImEiOiJjam92cmJyZmkxbnZkM3dudmU3dTdleXp5In0.vm8YZuizVdTWTY_QBOMxqA', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 20,
-            minZoom: 2,
-            id: 'mapbox.streets',
-            accessToken: 'pk.eyJ1IjoiZG9tYWdvanB1bGppYyIsImEiOiJjam92cmJyZmkxbnZkM3dudmU3dTdleXp5In0.vm8YZuizVdTWTY_QBOMxqA'
-        }).addTo(mymap);
-        app.markStation(lat, lng);
-        app.removeClass("is-loading");
+    initMap: () => {
+        let pent = { lat: 38.8719, lng: -77.0563 }
+        map = new google.maps.Map(app.id('map'), {
+            zoom: 15,
+            center: pent,
+            disableDefaultUI: true,
+            fullscreenControl: true
+        });
+        directionsService = new google.maps.DirectionsService();
+        geocoder = new google.maps.Geocoder;
+        infoWindow = new google.maps.InfoWindow
+        app.myLocation();
     },
-    initialLocation: () => {
-        navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, options);
+    myLocation: () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, option1);
+        } else {
+            $("#loader").remove();
+            $("body").innerHTML = "Geolocation is not supported by this browser."
+        }
     },
     onSuccess: (position) => {
-        app.initMap(position.coords.latitude, position.coords.longitude)
+        gpsOn = true;
+        app.hasLoaded();
+        app.markPosition(position.coords)
+    },
+    hasLoaded: () => {
+        $("#all").css('display', 'block');
+        $("#loader").css('display', 'none');
     },
     onError: () => {
-        $(".is-loading").removeClass("is-loading");
-        alert("Couldn't fetch location from GPS. Trying over internet..")
-        app.fallbackLocation();
+        $(".b").button("reset");
+        gpsOn = false;
+        app.networkLocation();
     },
     onLocError: (error) => {
-        app.fallbackLocation();
+        app.networkLocation();
     },
-    fallbackLocation: () => {
-        $.getJSON("http://ip-api.com/json/", function (data) {
-            if(mymap) {
+    networkLocation: () => {
+        navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, option2);
+    },
+    ipApiLocation: () => {
+        $.getJSON("http://ip-api.com/json", callback).fail(error => {
+            $("a").removeClass("is-loading");
+            alert("Error:", error)
+        });
+        function callback(data) {
+            if (map) {
                 let obj = {
                     coords: {
                         latitude: data.lat,
@@ -75,34 +116,26 @@ var app = {
                     },
                     timestamp: +Date.now()
                 }
-                console.log(JSON.stringify(obj))
-                
-               app.onLocSuccess(obj);
+                app.markPosition(obj.coords);
             } else {
-                app.initMap(data.lat, data.lon)
+                app.initMap()
             }
-        }).fail(function (error) { 
-            $(".is-loading").removeClass("is-loading");
-            alert("Error:" , error) 
-        });
+        }
+        app.hasLoaded();
     },
-    atStation: () => {
-        let btn = "station";
-        app.sendLocation(btn);
-    },
-    enteredBus: () => {
-        newRide = true;
-        $("#entered").attr("disabled", "disabled");
-        $("#left").removeAttr("disabled")
-        let btn = "entered";
-        app.sendLocation(btn);
-    },
-    leftBus: () => {
-        let btn = "left";
-        $("#entered").removeAttr("disabled")
-        $("#left").attr("disabled", "disabled");
-        app.sendLocation(btn);
-        newRide = false;
+    processButtons: () => {
+        let id = this.id;
+        $("#" + id).button("loading");
+        if(id == "entered") {
+            newRide = true;
+            $(this).attr("disabled", "disabled");
+            $("#left").removeAttr("disabled")
+        } else if(id == "left") {
+            $("#entered").removeAttr("disabled")
+            $(this).attr("disabled", "disabled");
+            newRide = false;
+        }
+        app.sendLocation(id);
     },
     sendLocation: (btn) => {
         let busID = app.id('busNumber').value;
@@ -110,9 +143,7 @@ var app = {
             alert("Please enter valid bus number")
             return;
         }
-
-        $("#" + btn).removeClass("is-loading");
-        $("#" + btn).addClass("is-loading");
+        $("#" + btn).button("loading");
 
         dbRoute = "busses/" + busID;
         if (newRide) {
@@ -120,7 +151,7 @@ var app = {
         } else {
             dbRoute += "/seen";
         }
-        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onLocError, options);
+        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onLocError, option1);
     },
     removeClass: (cls_name) => {
         let btns = app.class(cls_name);
@@ -134,11 +165,8 @@ var app = {
     onLocSuccess: (position) => {
         let busID = app.id('busNumber').value;
         let li = document.createElement('li');
-        let img = document.createElement('img');
         let lat = position.coords.latitude;
         let lon = position.coords.longitude;
-        app.markStation(lat, lon);
-        mymap.flyTo([lat, lon])
 
         let ride_obj = {
             timestamp: position.timestamp,
@@ -158,7 +186,7 @@ var app = {
         }
         alert(JSON.stringify(ride.stations))
         li.innerHTML = 'Latitude: ' + lat + '<br />' +
-            'Longitude: ' + lon + '<br />' + speed + '<br />' +
+            'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
             'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
         app.id("locations").prepend(li);
 
@@ -168,7 +196,7 @@ var app = {
             "longitude": lon,
             "timestamp": position.timestamp
         }
-        $(".is-loading").removeClass("is-loading");
+        $("b").button("reset");
         app.addToDb(data)
     },
     insertIntoLS: (key, data) => {
@@ -192,30 +220,54 @@ var app = {
             }
         });
     },
-    markStation: (lat, lng) => {
-        var circle = L.circle([lat, lng], {
-            color: 'red',
-            fillColor: '#f03',
-            fillOpacity: 0.5,
-            radius: 5
-        }).addTo(mymap);
+    markPosition: (coords) => {
+        let loc = { lat: coords.latitude, lng: coords.longitude }
+        map.panTo(loc)
+
+        var marker = new google.maps.Marker({
+            size: new google.maps.Size(10, 16),
+            position: loc,
+            map: map
+        });
     },
     drawPath: () => {
         let points = []
         for (let i = 0; i < ride.stations.length; i++) {
             points.push(Object.values(ride.stations[i].coords))
         }
-        var polyconnect = new L.Polyline(points, {
-            color: 'blue',
-            weight: 4,
-            opacity: 0.5,
-            smoothFactor: 1
+        alert(points)
+        var polyconnect = new google.maps.Polyline({
+            path: points,
+            geodesic: true,
+            strokeColor: '#00FF00',
+            strokeOpacity: 0.8,
+            strokeWeight: 4
         });
-        polyconnect.addTo(mymap);
+        polyconnect.setMap(map);
     },
     deleteWarning: () => {
         let el = app.class("notification")[0]
         el.parentNode.removeChild(el);
+    },
+    geocodeLatLng: (coords) => {
+        let latlng = {lat: coords.latitude, lng: coords.longitude}
+        geocoder.geocode({ 'location': latlng }, function(results, status) {
+            if (status === 'OK') {
+                if (results[0]) {
+                    map.setZoom(11);
+                    var marker = new google.maps.Marker({
+                        position: latlng,
+                        map: map
+                    });
+                    infowindow.setContent(results[0].formatted_address);
+                    infowindow.open(map, marker);
+                } else {
+                    window.alert('No results found');
+                }
+            } else {
+                window.alert('Geocoder failed due to: ' + status);
+            }
+        });
     },
     latLonDistance: (la1, lo1, la2, lo2) => {
         // Convert degrees to radians
