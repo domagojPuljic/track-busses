@@ -39,7 +39,7 @@ var fake_data2 = {
 } */
 var app = {
     init: () => {
-        $(".b").on("click", app.processButtons);
+        $(".b").on("click", app.checkBusId);
         $("#left").attr("disabled", "disabled");
         app.id("delete").addEventListener("click", app.deleteWarning);
         alertify.defaults.theme.ok = "btn btn-outline-success";
@@ -106,10 +106,7 @@ var app = {
         }
         app.hasLoaded();
     },
-    processButtons: (e) => {
-        firstLoad = false;
-        app.checkBusId();
-        let id = e.target.id;
+    processButtons: (id) => {
         $("#" + id).button("loading");
         if (id == "entered") {
             alertify.confirm(null, function () {
@@ -147,11 +144,15 @@ var app = {
     sendLocation: () => {
         navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, {enableHighAccuracy: true});
     },
-    checkBusId: () => {
+    checkBusId: (e) => {
+        firstLoad = false;
+        let id = e.target.id;
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
-            alert("Please enter a valid bus number")
+            alertify.alert("Please enter a valid bus number").set({'title':'Error'})
             return;
+        } else{
+            app.processButtons();
         }
         dbRoute = "busses/" + busID;
         if (newRide) {
