@@ -54,11 +54,12 @@ var app = {
     initMap: () => {
         let pent = { lat: 38.8719, lng: -77.0563 }
         map = new google.maps.Map(app.id('map'), {
-            zoom: 15,
+            zoom: 16,
             center: pent,
             disableDefaultUI: true,
             fullscreenControl: true
         });
+
         directionsService = new google.maps.DirectionsService();
         geocoder = new google.maps.Geocoder;
         infoWindow = new google.maps.InfoWindow
@@ -74,6 +75,7 @@ var app = {
     },
     onSuccess: (position) => {
         app.hasLoaded();
+        //app.geocodeLatLng(position.coords)
         app.markPosition(position.coords)
     },
     hasLoaded: () => {
@@ -98,6 +100,7 @@ var app = {
                     },
                     timestamp: +Date.now()
                 }
+                //app.geocodeLatLng(obj.coords)
                 app.markPosition(obj.coords);
                 app.onLocSuccess(obj);
             } else {
@@ -233,7 +236,6 @@ var app = {
         map.panTo(loc)
 
         var marker = new google.maps.Marker({
-            size: new google.maps.Size(10, 16),
             position: loc,
             map: map
         });
@@ -259,10 +261,11 @@ var app = {
     },
     geocodeLatLng: (coords) => {
         let latlng = { lat: coords.latitude, lng: coords.longitude }
-        geocoder.geocode({ 'location': latlng }, function (results, status) {
+        //map.panTo(loc)
+        geocoder.geocode({ 'location': latlng}, function (results, status) {
             if (status === 'OK') {
                 if (results[0]) {
-                    map.setZoom(15);
+                    map.setZoom(16);
                     var marker = new google.maps.Marker({
                         position: latlng,
                         map: map
