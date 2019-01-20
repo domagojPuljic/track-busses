@@ -3,19 +3,23 @@ var firstLoad = true;
 var map, geocoder, infoWindow, directionService;
 var speed = 0;
 var newRide = false;
+var station = false;
+var left = true;
+var ridekey = "";
 var ride = {
     stations: []
 }
 var dbRoute = "busses/";
-/* 
+
 var stationIcon = {
-    fillColor: '#f88',
+    fillColor: '#5f5',
     fillOpacity: 0.5,
-    strokeColor: '#a65',
-    strokeOpacity: 0.9,
-    strokeWeight: 1,
-    scale: 0.2
+    strokeColor: '#665',
+    strokeOpacity: 1,
+    strokeWeight: 2,
+    scale: 10
 }
+/*
 var currentPosIcon = {
     fillColor: '#999',
     fillOpacity: 0.3,
@@ -31,12 +35,13 @@ var fake_data = {
     "longitude": 16.4684625,
     "timestamp": "2019-01-19T16:20:42.615Z"
 }
+*/
 var fake_data2 = {
     "busID": "1",
     "latitude": 43.5163179,
     "longitude": 16.4719245,
     "timestamp": "2019-01-19T16:19:35.615Z"
-} */
+}
 var app = {
     init: () => {
         $(".b").on("click", app.checkBusId);
@@ -67,7 +72,7 @@ var app = {
     },
     myLocation: () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, {enableHighAccuracy: true});
+            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, { enableHighAccuracy: true });
         } else {
             $("#loader").remove();
             $("body").innerHTML = "Geolocation is not supported by this browser."
@@ -75,7 +80,6 @@ var app = {
     },
     onSuccess: (position) => {
         app.hasLoaded();
-        //app.geocodeLatLng(position.coords)
         app.markPosition(position.coords)
     },
     hasLoaded: () => {
@@ -92,48 +96,48 @@ var app = {
             alert("Error:", error)
         });
         function callback(data) {
-            if (map) {
-                let obj = {
-                    coords: {
-                        latitude: data.lat,
-                        longitude: data.lon,
-                    },
-                    timestamp: +Date.now()
-                }
-                //app.geocodeLatLng(obj.coords)
-                app.markPosition(obj.coords);
-                app.onLocSuccess(obj);
-            } else {
-                app.initMap()
+            let obj = {
+                coords: {
+                    latitude: data.lat,
+                    longitude: data.lon,
+                },
+                timestamp: +Date.now()
             }
+            app.markPosition(obj.coords);
+            app.onLocSuccess(obj);
         }
         app.hasLoaded();
     },
-    processButtons: (id) => {
-        $("#" + id).button("loading");
-        if (id == "entered") {
+    processButtons: (btnID, busID) => {
+        $("#" + btnID).button("loading");
+        if (btnID == "entered") {
             alertify.confirm(null, function () {
                 newRide = true;
-                $("#" + id).attr("disabled", "disabled");
+                left = false;
+                $("#" + btnID).attr("disabled", "disabled");
                 $("#left").removeAttr("disabled")
                 alertify.success('Ride started', 2);
+                app.makeRoute(busID)
                 app.sendLocation();
             }, function () {
                 alertify.error('Discarded', 2);
             }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>Start a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
 
-        } else if (id == "left") {
+        } else if (btnID == "left") {
             alertify.confirm(null, function () {
                 $("#entered").removeAttr("disabled")
-                $("#" + id).attr("disabled", "disabled");
-                newRide = false;
+                $("#" + btnID).attr("disabled", "disabled");
+                left = true;
                 alertify.error('Ride ended', 2);
+                app.makeRoute(busID)
                 app.sendLocation();
             }, function () {
                 alertify.error('Discarded', 2);
             }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>End a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
         } else {
             alertify.confirm(null, function () {
+                left = false;
+                app.makeRoute(busID)
                 app.sendLocation();
             }, function () {
                 alertify.error('Discarded', 2);
@@ -144,19 +148,22 @@ var app = {
         }
     },
     sendLocation: () => {
-        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, {enableHighAccuracy: true});
+        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, { enableHighAccuracy: true });
     },
     checkBusId: (e) => {
         firstLoad = false;
-        let id = e.target.id;
+        let btnID = e.target.id;
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
-            alertify.alert(null).set({'title':"<span style='font-size:15px;'>Invalid bus number</span>", 'resizable': true
-        }).resizeTo('80%', 150);
+            alertify.alert(null).set({
+                'title': "<span style='font-size:15px;'>Invalid bus number</span>", 'resizable': true
+            }).resizeTo('80%', 150);
             return;
-        } else{
-            app.processButtons(id);
+        } else {
+            app.processButtons(btnID, busID);
         }
+    },
+    makeRoute: (busID) => {
         dbRoute = "busses/" + busID;
         if (newRide) {
             dbRoute += "/ride";
@@ -178,7 +185,6 @@ var app = {
         let li = document.createElement('li');
         let lat = position.coords.latitude;
         let lon = position.coords.longitude;
-
         let ride_obj = {
             timestamp: position.timestamp,
             coords: {
@@ -186,9 +192,10 @@ var app = {
                 lng: lon
             }
         }
+        app.markPosition(position.coords)
         if (ride.stations.length == 1) {
             ride.stations.push(ride_obj)
-            app.drawPath()
+            //app.drawPath()
             speed = app.travelSpeed(ride.stations)
         } else if (ride.stations.length > 1) {
             ride.stations.shift()
@@ -206,7 +213,7 @@ var app = {
             "timestamp": position.timestamp
         }
         $(".b").button("reset");
-        if(!firstLoad) {
+        if (!firstLoad) {
             app.addToDb(data)
         }
     },
@@ -216,10 +223,32 @@ var app = {
         localStorage.setItem(key, d);
     },
     addToDb: (data) => {
-        var ref = firebase.database().ref(dbRoute);
-        var station = ref.child("arrivals").push()
-        station.set(data);
-        alertify.notify('Position saved into DB', 'success', 3);
+        alertify.confirm(null, function () {
+            var ref = firebase.database().ref(dbRoute);
+            if (left) {
+                var station = ref.child(ridekey + "/arrivals").push() // use old ridekey
+                ridekey = "";
+                newRide = false;
+            }
+            else if (newRide) {
+                if (ridekey == "") {
+                    ridekey = ref.push().key; // make new ride entry
+                }
+                var station = ref.child(ridekey + "/arrivals").push()
+            } else {
+                var station = ref.child("arrivals").push()
+            }
+            station.set(data, function (error) {
+                if (error) {
+                    alertify.error("Couldn't save to DB", 2);
+                }
+                else {
+                    alertify.success('Position saved into DB', 2);
+                }
+            });
+        }, function () {
+            alertify.error('Discarded', 2);
+        }).set({ resizable: true, labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>Store it into DB?</span>" }).resizeTo('90%', 150);
     },
     isOnline: () => {
         var connectedRef = firebase.database().ref(".info/connected");
@@ -233,11 +262,35 @@ var app = {
     },
     markPosition: (coords) => {
         let loc = { lat: coords.latitude, lng: coords.longitude }
-        map.panTo(loc)
-
+        stationIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        if (!firstLoad) {
+            stationIcon.fillColor = '#f88';
+            stationIcon.strokeColor = '#a65';
+        }
         var marker = new google.maps.Marker({
             position: loc,
-            map: map
+            map: map,
+            icon: stationIcon,
+        });
+        map.panTo(loc)
+        app.getLocationAddress(loc, marker);
+    },
+    getLocationAddress: (coords, marker) => {
+        let lat = coords.lat;
+        let lng = coords.lng;
+        let content = "Unknown"
+        let url = `https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lng}`
+        $.getJSON(url, function (data) {
+            let num = data["address"]["house_number"] ? data["address"]["house_number"] : ""
+            content = data["address"]["road"] + " " + num
+        }).fail(function (error) {
+            content = "Unknown"
+        }).always(function () {
+            marker.addListener('click', function () {
+                infoWindow.setContent(content);
+                infoWindow.setOptions({ maxWidth: 250 });
+                infoWindow.open(map, marker);
+            });
         });
     },
     drawPath: () => {
@@ -262,7 +315,7 @@ var app = {
     geocodeLatLng: (coords) => {
         let latlng = { lat: coords.latitude, lng: coords.longitude }
         //map.panTo(loc)
-        geocoder.geocode({ 'location': latlng}, function (results, status) {
+        geocoder.geocode({ 'location': latlng }, function (results, status) {
             if (status === 'OK') {
                 if (results[0]) {
                     map.setZoom(16);
