@@ -2,3 +2,4 @@ plugins
 platforms
 hooks
 node_modules
+*.DS_Store

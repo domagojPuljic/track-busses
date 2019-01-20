@@ -49,10 +49,7 @@ var fake_data2 = {
 } */
 var app = {
     init: () => {
-        app.id("station").addEventListener("click", app.atStation);
         $(".b").on("click", app.processButtons)
-        app.id("entered").addEventListener("click", app.enteredBus);
-        app.id("left").addEventListener("click", app.leftBus);
         app.id("delete").addEventListener("click", app.deleteWarning);
     },
     id: (id) => {
@@ -94,7 +91,7 @@ var app = {
     onError: () => {
         $(".b").button("reset");
         gpsOn = false;
-        app.networkLocation();
+        app.ipApiLocation();
     },
     onLocError: (error) => {
         app.networkLocation();
@@ -117,6 +114,7 @@ var app = {
                     timestamp: +Date.now()
                 }
                 app.markPosition(obj.coords);
+                app.onLocSuccess(obj);
             } else {
                 app.initMap()
             }
@@ -143,7 +141,7 @@ var app = {
             alert("Please enter valid bus number")
             return;
         }
-        $("#" + btn).button("loading");
+        //$("#" + btn).button("loading");
 
         dbRoute = "busses/" + busID;
         if (newRide) {
@@ -171,8 +169,8 @@ var app = {
         let ride_obj = {
             timestamp: position.timestamp,
             coords: {
-                latitude: lat,
-                longitude: lon
+                lat: lat,
+                lng: lon
             }
         }
         if (ride.stations.length == 1) {
@@ -184,7 +182,6 @@ var app = {
         } else {
             ride.stations.push(ride_obj)
         }
-        alert(JSON.stringify(ride.stations))
         li.innerHTML = 'Latitude: ' + lat + '<br />' +
             'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
             'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
@@ -192,8 +189,8 @@ var app = {
 
         data = {
             "busID": busID,
-            "latitude": lat,
-            "longitude": lon,
+            "lat": lat,
+            "lng": lon,
             "timestamp": position.timestamp
         }
         $("b").button("reset");
@@ -205,7 +202,6 @@ var app = {
         localStorage.setItem(key, d);
     },
     addToDb: (data) => {
-        console.log(data)
         var ref = firebase.database().ref(dbRoute);
         var station = ref.child("arrivals").push()
         station.set(data);
@@ -233,15 +229,15 @@ var app = {
     drawPath: () => {
         let points = []
         for (let i = 0; i < ride.stations.length; i++) {
-            points.push(Object.values(ride.stations[i].coords))
+            let coords = ride.stations[i].coords
+            points.push(coords)
         }
-        alert(points)
         var polyconnect = new google.maps.Polyline({
             path: points,
             geodesic: true,
             strokeColor: '#00FF00',
             strokeOpacity: 0.8,
-            strokeWeight: 4
+            strokeWeight: 10
         });
         polyconnect.setMap(map);
     },
@@ -254,7 +250,7 @@ var app = {
         geocoder.geocode({ 'location': latlng }, function(results, status) {
             if (status === 'OK') {
                 if (results[0]) {
-                    map.setZoom(11);
+                    map.setZoom(15);
                     var marker = new google.maps.Marker({
                         position: latlng,
                         map: map
@@ -304,13 +300,13 @@ var app = {
     },
     travelSpeed: (loc) => {
         let p1 = {
-            "latitude": loc[0].coords.latitude,
-            "longitude": loc[0].coords.longitude,
+            "latitude": loc[0].coords.lat,
+            "longitude": loc[0].coords.lng,
             "timestamp": loc[0].timestamp
         }
         let p2 = {
-            "latitude": loc[1].coords.latitude,
-            "longitude": loc[1].coords.longitude,
+            "latitude": loc[1].coords.lat,
+            "longitude": loc[1].coords.lng,
             "timestamp": loc[1].timestamp
         }
 
