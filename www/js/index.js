@@ -113,10 +113,10 @@ var app = {
                 newRide = true;
                 $("#" + id).attr("disabled", "disabled");
                 $("#left").removeAttr("disabled")
-                alertify.success('Ride started');
+                alertify.success('Ride started', 2);
                 app.sendLocation();
             }, function () {
-                alertify.error('Discarded');
+                alertify.error('Discarded', 2);
             }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>Start a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
 
         } else if (id == "left") {
@@ -124,17 +124,16 @@ var app = {
                 $("#entered").removeAttr("disabled")
                 $("#" + id).attr("disabled", "disabled");
                 newRide = false;
-                alertify.error('Ride ended');
+                alertify.error('Ride ended', 2);
                 app.sendLocation();
             }, function () {
-                alertify.error('Discarded');
+                alertify.error('Discarded', 2);
             }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>End a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
         } else {
             alertify.confirm(null, function () {
-                alertify.success('Accepted');
                 app.sendLocation();
             }, function () {
-                alertify.error('Discarded');
+                alertify.error('Discarded', 2);
             }).set({
                 labels: { ok: "Yes", cancel: 'Cancel' },
                 title: "<span style='font-size:15px;'>Mark this station?</span>", 'resizable': true
@@ -149,10 +148,11 @@ var app = {
         let id = e.target.id;
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
-            alertify.alert("Please enter a valid bus number").set({'title':'Error'})
+            alertify.alert(null).set({'title':"<span style='font-size:15px;'>Invalid bus number</span>", 'resizable': true
+        }).resizeTo('80%', 150);
             return;
         } else{
-            app.processButtons();
+            app.processButtons(id);
         }
         dbRoute = "busses/" + busID;
         if (newRide) {
