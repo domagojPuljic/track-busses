@@ -11,38 +11,36 @@ var ride = {
 }
 var dbRoute = "busses/";
 
-var stationIcon = {
-    fillColor: '#5f5',
-    fillOpacity: 0.5,
+var newPosIcon = {
+    fillColor: '#f55',
+    fillOpacity: 0.7,
     strokeColor: '#665',
     strokeOpacity: 1,
     strokeWeight: 2,
-    scale: 10
+    scale: 6
 }
-/*
-var currentPosIcon = {
-    fillColor: '#999',
-    fillOpacity: 0.3,
+var stationIcon = {
+    fillColor: '#33f',
+    fillOpacity: 1,
     strokeColor: '#000',
-    strokeOpacity: 0.8,
-    strokeWeight: 1,
-    scale: 0.2
+    strokeOpacity: 1,
+    strokeWeight: 5,
+    scale: 5
 }
-
-var fake_data = {
-    "busID": "1",
-    "latitude": 43.5112668,
-    "longitude": 16.4684625,
-    "timestamp": "2019-01-19T16:20:42.615Z"
-}
-*/
-var fake_data2 = {
-    "busID": "1",
-    "latitude": 43.5163179,
-    "longitude": 16.4719245,
-    "timestamp": "2019-01-19T16:19:35.615Z"
+var currentPosIcon = {
+    fillColor: '#fff',
+    fillOpacity: 1,
+    strokeColor: '#000',
+    strokeOpacity: 1,
+    strokeWeight: 5,
+    scale: 7
 }
 var app = {
+    markers: [],
+    mapLabel: null,
+    options: { 
+        
+    },
     init: () => {
         $(".b").on("click", app.checkBusId);
         $("#left").attr("disabled", "disabled");
@@ -67,12 +65,12 @@ var app = {
 
         directionsService = new google.maps.DirectionsService();
         geocoder = new google.maps.Geocoder;
-        infoWindow = new google.maps.InfoWindow
+        infoWindow = new google.maps.InfoWindow();
         app.myLocation();
     },
     myLocation: () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, { enableHighAccuracy: true });
+            navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, app.options);
         } else {
             $("#loader").remove();
             $("body").innerHTML = "Geolocation is not supported by this browser."
@@ -134,6 +132,8 @@ var app = {
             }, function () {
                 alertify.error('Discarded', 2);
             }).set({ labels: { ok: 'Yes', cancel: 'Cancel' }, title: "<span style='font-size:15px;'>End a ride?</span>", 'resizable': true }).resizeTo('90%', 150);
+        } else if (btnID == "all-stations") {
+            app.loadStationsFromDb(busID);
         } else {
             alertify.confirm(null, function () {
                 left = false;
@@ -148,7 +148,7 @@ var app = {
         }
     },
     sendLocation: () => {
-        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, { enableHighAccuracy: true });
+        navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, app.options);
     },
     checkBusId: (e) => {
         firstLoad = false;
@@ -262,15 +262,18 @@ var app = {
     },
     markPosition: (coords) => {
         let loc = { lat: coords.latitude, lng: coords.longitude }
-        stationIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        newPosIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        currentPosIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        let ico;
         if (!firstLoad) {
-            stationIcon.fillColor = '#f88';
-            stationIcon.strokeColor = '#a65';
+            ico = newPosIcon;
+        } else {
+            ico = currentPosIcon;
         }
         var marker = new google.maps.Marker({
             position: loc,
             map: map,
-            icon: stationIcon,
+            icon: ico,
         });
         map.panTo(loc)
         app.getLocationAddress(loc, marker);
@@ -343,8 +346,7 @@ var app = {
 
 
         // radius of earth in meters
-        let r = 6378100;
-
+        let r = 6371000;
         // P
         let rho1 = r * Math.cos(lat1);
         let z1 = r * Math.sin(lat1);
@@ -383,5 +385,92 @@ var app = {
         let speed_mps = dist / time_s;
         let speed_kph = speed_mps / 3.6;
         return speed_kph
+    },
+    loadStationsFromDb: (busNo) => {
+        let r_name = '';
+        app.fetchBusInfo(busNo, function(busses, err) {
+            if (err || busses.length < 1) {
+                r_name = "No such bus"
+            } else {
+                for(let i = 0; i < busses.length; i++) {
+                    r_name += busses[i]['line_route'] + '<br>'
+                }
+            }
+            console.log(r_name)
+            app.showRouteName(r_name);
+        });
+        
+        var locations = [];
+        database.ref("stations").once("value", function(snap) {
+            snap.forEach(function(val) {
+                let linije = val.val()['Linije']
+                if(linije) {
+                    if(linije.includes(busNo.toString())){
+                        locations.push(val.val());
+                    }
+                }
+            });
+            app.clearMarkers(app.markers)
+            app.setMarkers(locations);
+        }, function (err) {
+            alertify.alert(null).set({
+                'title': "<span style='font-size:15px;'>Something went wrong while fetching stations</span>", 'resizable': true
+            }).resizeTo('80%', 150);
+        });
+   
+    },
+    fetchBusInfo: (busNo, callback) => {
+        database.ref("timetable").orderByChild('line_number').equalTo(busNo).once('value', function(snap) {
+            let json_obj = []
+            let temp = Object.keys(snap.val());
+            for(let i = 0; i < temp.length; i++) {
+                let res = snap.val()[temp[i]]
+                json_obj.push(res)
+            }
+            callback(json_obj, null);
+        }, function(err) {
+            callback(err);
+        });
+    },
+    setMarkers: (locations) => {
+        var marker, i;
+        app.markers = [];
+        stationIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        for (i = 0; i < locations.length; i++) {
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(locations[i]['Latitude'], locations[i]['Longitude']),
+                map: map,
+                icon: stationIcon
+            });
+            app.markers.push(marker);
+            google.maps.event.addListener(marker, 'click', (function (marker, i) {
+                return function () {
+                    let c = '<p style="font-weight: normal; line-height: normal;"><strong>Station:</strong> ' + 
+                        locations[i]['Naziv'] + '<br><strong>Latitude:</strong> ' +  
+                        locations[i]['Latitude']  + '<br><strong>Longitude:</strong> ' + 
+                        locations[i]['Longitude']  + '</p>'
+                    infoWindow.setContent(c);
+                    infoWindow.open(map, marker);
+                    map.panTo(marker.position)
+                }
+            })(marker, i));
+        }
+        app.panToAllMarkers(app.markers);
+    },
+    panToAllMarkers: (markers) => {
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < markers.length; i++) {
+            bounds.extend(markers[i].getPosition());
+        }
+        map.fitBounds(bounds);
+        map.setZoom(map.getZoom() + 0.3);
+    },
+    clearMarkers: (markers) => {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+    },
+    showRouteName: (str) => {
+        app.id('route-name').innerHTML = str;
     }
 }

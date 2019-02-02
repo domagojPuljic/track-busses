@@ -1,5 +1,4 @@
-
-* {
+html, body {
     font-family: Consolas, monaco, monospace;
     text-align: center;
     box-sizing: border-box;
@@ -24,17 +23,19 @@ ul li {
 ul {
     padding-left: 0;
 }
-.bt {height:20px;}
+.bt {
+    height:20px;
+}
 input[type="number"] {
     height: 30px;
     border: none;
     border: 1px solid #17a2b8;
-    border-radius: 5px;
 }
 .col > * {
     width: 100%;
     font-size: 11px;
-    box-shadow: 0 0 5px 2px#aaa;
+    box-shadow: 0 0 6px 0#aaa;
+    border-radius: 0;
 }
 .row {margin: 0;}
 .col {
@@ -46,6 +47,12 @@ input[type="number"] {
     min-height: 450px;
     box-shadow: 0 0 10px #666;
     margin-bottom: 10px;
+}
+#route-name {
+    position:absolute;
+    top:10px; 
+    width: 100%;
+    text-transform: uppercase;
 }
 .notification {
     font-size: 11px;
