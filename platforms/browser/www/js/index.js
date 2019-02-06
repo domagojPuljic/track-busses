@@ -44,9 +44,28 @@ var app = {
     init: () => {
         $(".b").on("click", app.checkBusId);
         $("#left").attr("disabled", "disabled");
+        app.sidebarStuff();
         app.id("delete").addEventListener("click", app.deleteWarning);
         alertify.defaults.theme.ok = "btn btn-outline-success";
         alertify.defaults.theme.cancel = "btn btn-outline-danger";
+    },
+    sidebarStuff: () => {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active', function(){
+                if($("#sidebar").hasClass('active')) {
+                    $(".wrapper").css("z-index", '20')
+                    app.id("menu").src = "res/svg/si-glyph-arrow-right.svg"
+                } else {
+                    $(".wrapper").css("z-index", '1')
+                    app.id("menu").src = "res/svg/si-glyph-arrow-left.svg"
+                }
+            });
+            // close dropdowns
+            $('.collapse.in').toggleClass('in');
+            // and also adjust aria-expanded attributes we use for the open/closed arrows
+            // in our CSS
+            $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+        });
     },
     id: (id) => {
         return document.getElementById(id);
@@ -55,12 +74,11 @@ var app = {
         return document.getElementsByClassName(cl);
     },
     initMap: () => {
-        let pent = { lat: 38.8719, lng: -77.0563 }
+        let pentagon = { lat: 38.8719, lng: -77.0563 }
         map = new google.maps.Map(app.id('map'), {
             zoom: 16,
-            center: pent,
+            center: pentagon,
             disableDefaultUI: true,
-            fullscreenControl: true
         });
 
         directionsService = new google.maps.DirectionsService();
@@ -202,10 +220,10 @@ var app = {
         } else {
             ride.stations.push(ride_obj)
         }
-        li.innerHTML = 'Latitude: ' + lat + '<br />' +
-            'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
-            'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
-        app.id("locations").prepend(li);
+        //li.innerHTML = 'Latitude: ' + lat + '<br />' +
+        //    'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
+        //    'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
+        // app.id("locations").prepend(li);
         data = {
             "busID": busID,
             "lat": lat,

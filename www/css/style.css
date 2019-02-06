@@ -1,14 +1,82 @@
+@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 html, body {
+    height: 100%;
     font-family: Consolas, monaco, monospace;
     text-align: center;
     box-sizing: border-box;
 }
-body {
-    margin: 10px;
+
+/* SIDEBAR */
+.wrapper {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2em;
+    font-weight: 400;
+    line-height: 1.7em;
+    color: #999;
+    display: flex;
+    align-items: stretch;
 }
+#content {
+    color: #000;
+}
+#sidebar {
+    min-width: 200px;
+    max-width: 200px;
+    min-height: 100vh;
+    background: rgb(230, 230, 230);
+    color: #000;
+    transition: all 0.3s;
+}
+#sidebar .sidebar-header {
+    text-align: center;
+    padding: 20px;
+    background: rgb(173, 173, 173);
+    background: linear-gradient(rgb(173, 173, 173), rrgb(230, 230, 230));
+    background: -webkit-linear-gradient(rgb(173, 173, 173), rgb(230, 230, 230));
+}
+#sidebar.active {
+    margin-left: -200px;
+}
+a, a:hover, a:focus {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+a[data-toggle="collapse"] {
+    position: relative;
+}
+.dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+}
+.components .list-unstyled {
+    text-align: right;
+}
+.list-unstyled a {
+    padding: 20px;
+}
+#sidebarCollapse {
+    z-index: 20;
+}
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -200px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+}
+
+/* END SIDEBAR */
+
+
 #all {
     display: none;
     height: 100%;
+    width: 100%;
 }
 .title {
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
@@ -23,12 +91,19 @@ ul li {
 ul {
     padding-left: 0;
 }
-.bt {
-    height:20px;
+ul li:last-child {
+    border-bottom: none;
+}
+.b {
+    height: 25px;
+    font-size: 10px;
+    width: 60px;
 }
 input[type="number"] {
-    height: 30px;
+    height: 25px;
     border: none;
+    border-radius: 5px;
+    width: 120px;
     border: 1px solid #17a2b8;
 }
 .col > * {
@@ -43,14 +118,21 @@ input[type="number"] {
     margin: 15px 0;
 }
 #map {
+    position: absolute;
+    top: 0;
+    z-index: 10;
     height: 100%;
+    width: 100%;
     min-height: 450px;
     box-shadow: 0 0 10px #666;
     margin-bottom: 10px;
 }
 #route-name {
     position:absolute;
-    top:10px; 
+    z-index: 10;
+    top:20px; 
+    width: 100%;
+    text-align: center;
     width: 100%;
     text-transform: uppercase;
 }

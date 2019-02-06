@@ -4,12 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    
-    <meta http-equiv="Content-Security-Policy" content="'unsafe-inline'; style-src 'self' 'unsafe-inline'; *" />
-    
+
     <script src="js/jquery-3.1.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/alertify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/alertify.css">
     <link rel="stylesheet" href="css/themes/semantic.css">
     <link rel="stylesheet" href="css/bootstrap.min.css">
@@ -19,39 +18,80 @@
 
 <body>
     <div id="loader"></div>
-    <div id="all container-fluid">
-        <h3 class="title">Bus location service</h3>
-        <div class="alert alert-danger notification" role="alert">
-            <button id="delete" class="close">x</button>
-            <p>
-                If just boarded, click <em><strong>Entered</strong></em><br>
-                If you are leaving a bus, click <em><strong>Left</strong></em><br>
-                At any bus stop between two above locations, click <em><strong>Station</strong></em>
-            </p>
-        </div>
-        <div class="row">
-            <div class="col">
-                <input id="busNumber" type="number" placeholder="Bus No.">
+    <div class="wrapper">
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h4>Promet Split</h4>
             </div>
-            <div class="col">
-                <button id="entered" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Entered</button>
-            </div>
-            <div class="col">
-                <button id="station" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Station</button>
-            </div>
-            <div class="col">
-                <button id="left" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">Left</button>
-            </div>
-            <div class="col">
-                <button id="all-stations" type="button" class="b btn btn-outline-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i>">All</button>
-            </div>
-        </div>
-        <div style="text-align: center; position: relative;">
+            <ul class="list-unstyled components">
+                <p style="text-align:center;">Welcome</p>
+                <li class="active">
+                    <a href="#">Home</a>
+                </li>
+                <li>
+                    <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">Vozni red</a>
+                    <ul class="collapse list-unstyled" id="pageSubmenu">
+                        <li>
+                            <a href="#">Grad Split</a>
+                        </li>
+                        <li>
+                            <a href="#">Urbano područje</a>
+                        </li>
+                        <li>
+                            <a href="#">Prigradsko područje</a>
+                        </li>
+                        <li>
+                            <a href="#">Trogir</a>
+                        </li>
+                        <li>
+                            <a href="#">Otok Šolta</a>
+                        </li>
+                        <li>
+                            <a href="#">Sve</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">Pitanja?</a>
+                </li>
+                <li>
+                    <input id="busNumber" type="number" placeholder="Bus No.">
+                </li>
+                <li>
+                    <button id="entered" type="button" class="b btn btn-sm btn-outline-info">Entered</button>
+                    <button id="left" type="button" class="b btn  btn-sm btn-outline-info" >Left</button>
+                </li>
+                <li>
+                    <button id="station" type="button" class="b btn btn-sm btn-outline-info">Station</button>
+                    <button id="all-stations" type="button" class="b btn  btn-sm btn-outline-info">All</button>
+                </li>
+            </ul>
+        </nav>
+
+        <div id="content">
+            <nav class="navbar navbar-light">
+                <div class="container-fluid" style="margin-left: -10px;">
+                    <div id="sidebarCollapse">
+                        <img id="menu" src="res/svg/si-glyph-arrow-right.svg" style="width:25px;height:25px"/>
+                    </div>
+                </div>
+            </nav>
+
             <div id="map"></div>
             <div id="route-name"></div>
+
+            <div id="all container-fluid" style="text-align: center; position: relative;">
+                <h3 class="title">Bus location service</h3>
+                <div class="alert alert-danger notification" role="alert">
+                    <button id="delete" class="close">x</button>
+                    <p>
+                        If just boarded, click <em><strong>Entered</strong></em><br>
+                        If you are leaving a bus, click <em><strong>Left</strong></em><br>
+                        At any bus stop between two above locations, click <em><strong>Station</strong></em>
+                    </p>
+                </div>
+            </div>
         </div>
-        
-        <ul id="locations"></ul>
     </div>
     <script src="cordova.js"></script>
 
