@@ -1,4 +1,5 @@
 var data = {}
+var admin = false;
 var firstLoad = true;
 var map, geocoder, infoWindow, directionService;
 var speed = 0;
@@ -42,30 +43,67 @@ var app = {
         
     },
     init: () => {
-        $(".b").on("click", app.checkBusId);
-        $("#left").attr("disabled", "disabled");
-        app.sidebarStuff();
-        app.id("delete").addEventListener("click", app.deleteWarning);
         alertify.defaults.theme.ok = "btn btn-outline-success";
         alertify.defaults.theme.cancel = "btn btn-outline-danger";
+
+        $("#left").attr("disabled", "disabled");
+        $("#admin").hide();
+        app.sidebarStuff();
+        app.id("delete").addEventListener("click", app.deleteWarning);
+        $(".b").on("click", app.checkBusId);
+        $("#admin-icon").on('click', app.adminLogin);
     },
     sidebarStuff: () => {
         $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active', function(){
-                if($("#sidebar").hasClass('active')) {
-                    $(".wrapper").css("z-index", '20')
-                    app.id("menu").src = "res/svg/si-glyph-arrow-right.svg"
-                } else {
-                    $(".wrapper").css("z-index", '1')
-                    app.id("menu").src = "res/svg/si-glyph-arrow-left.svg"
-                }
-            });
-            // close dropdowns
+            $('#sidebar').toggleClass('active');
+            $("#menu").hide();
+            if($("#sidebar").hasClass('active')) {
+                $(".wrapper").css("z-index", '20')
+                app.id("menu").src = "res/svg/si-glyph-arrow-left.svg";
+                $("#menu").fadeIn("slow");
+            } else {
+                $(".wrapper").css("z-index", '1')
+                app.id("menu").src = "res/svg/si-glyph-arrow-right.svg";
+                $("#menu").fadeIn("slow");
+            }
             $('.collapse.in').toggleClass('in');
-            // and also adjust aria-expanded attributes we use for the open/closed arrows
-            // in our CSS
             $('a[aria-expanded=true]').attr('aria-expanded', 'false');
         });
+    },
+    adminLogin: () => {
+        let f = () => {
+            alertify.error("Discarded", 2);
+        }
+        if(admin){
+            alertify.confirm(null, function () {
+                admin = false;
+                $("#admin").fadeOut();
+                $("#admin-img").css('background', '#faa');
+                alertify.success("Logged out", 2)
+            }, f).set({ 
+                'labels': { ok: 'Yes', cancel: 'No' }, 
+                'title': "<span style='font-size:15px;'>Logout?</span>", 
+                'resizable': true 
+            }).resizeTo('90%', 150);
+        } else {
+            alertify.prompt('Admin password:').set({
+                'onok': function(e, data) { 
+                    if(data == "j@keLozinke") {
+                        admin = true;
+                        $("#admin").fadeIn();
+                        $("#admin-img").css('background', '#afa');
+                        alertify.success('Logged in as Admin O.o', 5)
+                    } else {
+                        alertify.error('Wrong Password', 2)
+                    }
+                }, 
+                'oncancel': f, 
+                'onexit': f, 
+                'type': 'text', 
+                'title': 'Login',
+                'resizable': true
+            }).resizeTo('90%', 250);
+        }
     },
     id: (id) => {
         return document.getElementById(id);

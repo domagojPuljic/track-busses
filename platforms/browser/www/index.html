@@ -24,9 +24,9 @@
                 <h4>Promet Split</h4>
             </div>
             <ul class="list-unstyled components">
-                <p style="text-align:center;">Welcome</p>
+                <p style="text-align:center;">Dobrodošli</p>
                 <li class="active">
-                    <a href="#">Home</a>
+                    <a href="#">Početna</a>
                 </li>
                 <li>
                     <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">Vozni red</a>
@@ -52,20 +52,20 @@
                     </ul>
                 </li>
                 <li>
-                    <a href="#">Pitanja?</a>
+                    <a href="#">Kontakt</a>
                 </li>
-                <li>
-                    <input id="busNumber" type="number" placeholder="Bus No.">
-                </li>
-                <li>
+                <li id="admin">
+                    <small class="text-secondary">Admin area:</small>
+                    <input id="busNumber" type="number" placeholder="Bus No."><br>
                     <button id="entered" type="button" class="b btn btn-sm btn-outline-info">Entered</button>
-                    <button id="left" type="button" class="b btn  btn-sm btn-outline-info" >Left</button>
-                </li>
-                <li>
+                    <button id="left" type="button" class="b btn  btn-sm btn-outline-info" >Left</button><br>
                     <button id="station" type="button" class="b btn btn-sm btn-outline-info">Station</button>
                     <button id="all-stations" type="button" class="b btn  btn-sm btn-outline-info">All</button>
                 </li>
             </ul>
+            <span id="admin-icon">
+                <img id="admin-img" src="res/svg/si-glyph-person-man.svg">
+            </span>
         </nav>
 
         <div id="content">
@@ -79,18 +79,6 @@
 
             <div id="map"></div>
             <div id="route-name"></div>
-
-            <div id="all container-fluid" style="text-align: center; position: relative;">
-                <h3 class="title">Bus location service</h3>
-                <div class="alert alert-danger notification" role="alert">
-                    <button id="delete" class="close">x</button>
-                    <p>
-                        If just boarded, click <em><strong>Entered</strong></em><br>
-                        If you are leaving a bus, click <em><strong>Left</strong></em><br>
-                        At any bus stop between two above locations, click <em><strong>Station</strong></em>
-                    </p>
-                </div>
-            </div>
         </div>
     </div>
     <script src="cordova.js"></script>
