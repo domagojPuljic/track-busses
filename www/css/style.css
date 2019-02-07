@@ -163,11 +163,6 @@ ul li:last-child {
     width: 100%;
     text-transform: uppercase;
 }
-.notification {
-    font-size: 11px;
-    padding: 5px;
-    margin: 0;
-}
 #loader {
     position:absolute;
     width:50px;
@@ -175,10 +170,10 @@ ul li:last-child {
     z-index: 99;
     margin-top: -25px; /*half of height*/
     margin-left: -25px; /*half of width*/
-    left:50%;
-    top:50%;
-    border-right:2px solid #000;
-    border-radius:50%;
+    left: 50%;
+    top: 50%;
+    border-right: 1px solid #000;
+    border-radius: 50%;
     animation: rot 0.7s linear infinite;
 }
 

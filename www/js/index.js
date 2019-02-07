@@ -49,7 +49,6 @@ var app = {
         $("#left").attr("disabled", "disabled");
         $("#admin").hide();
         app.sidebarStuff();
-        app.id("delete").addEventListener("click", app.deleteWarning);
         $(".b").on("click", app.checkBusId);
         $("#admin-icon").on('click', app.adminLogin);
     },
@@ -366,10 +365,6 @@ var app = {
             strokeWeight: 10
         });
         polyconnect.setMap(map);
-    },
-    deleteWarning: () => {
-        let el = app.class("notification")[0]
-        el.parentNode.removeChild(el);
     },
     geocodeLatLng: (coords) => {
         let latlng = { lat: coords.latitude, lng: coords.longitude }
