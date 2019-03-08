@@ -39,10 +39,13 @@ var currentPosIcon = {
 var app = {
     markers: [],
     mapLabel: null,
-    options: { 
-        
-    },
+    stationImg: null,
+    slideIndex: 0,
+    zoneId: null,
     init: () => {
+        document.addEventListener('backbutton', app.backPressed, false); 
+
+        alertify.defaults.transition = "zoom";
         alertify.defaults.theme.ok = "btn btn-outline-success";
         alertify.defaults.theme.cancel = "btn btn-outline-danger";
 
@@ -50,58 +53,83 @@ var app = {
         $("#admin").hide();
         app.sidebarStuff();
         $(".b").on("click", app.checkBusId);
+        app.listAllBusNames()
+        $("#pageSubmenu a, .ui-content a").on("click", app.fetchRoutesByZone);
         $("#admin-icon").on('click', app.adminLogin);
+        
+        app.carousel();
+        $(".ui-content, #main-page, #map-page").on('click', function(){
+            app.removeActiveClass();
+        })
+    },
+    removeActiveClass: () => {
+        if($("#sidebar").hasClass("active")) {
+            $("#sidebar").removeClass("active")
+        }
+    },
+    backPressed: () => {
+        window.history.back();
+    },
+    expandImage: () => {
+        
     },
     sidebarStuff: () => {
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
-            $("#menu").hide();
             if($("#sidebar").hasClass('active')) {
                 $(".wrapper").css("z-index", '20')
-                app.id("menu").src = "res/svg/si-glyph-arrow-left.svg";
-                $("#menu").fadeIn("slow");
             } else {
                 $(".wrapper").css("z-index", '1')
-                app.id("menu").src = "res/svg/si-glyph-arrow-right.svg";
-                $("#menu").fadeIn("slow");
             }
             $('.collapse.in').toggleClass('in');
             $('a[aria-expanded=true]').attr('aria-expanded', 'false');
         });
     },
+    setSlidesHeight: () => {
+        let h = $(".slides").css('height');
+        $(".images-slideshow").css('height', h);
+    },
+    carousel:() => {
+        var x = $(".slides")
+        x.hide()
+        app.slideIndex++;
+        if (app.slideIndex > x.length) { app.slideIndex = 1 } 
+        $(x[app.slideIndex - 1]).fadeIn(1500); 
+        setTimeout(app.carousel, 5000); // Change image every 5 seconds
+    },
     adminLogin: () => {
         let f = () => {
             alertify.error("Discarded", 2);
         }
-        if(admin){
+        if (admin) {
             alertify.confirm(null, function () {
                 admin = false;
                 $("#admin").fadeOut();
                 $("#admin-img").css('background', '#faa');
                 alertify.success("Logged out", 2)
-            }, f).set({ 
-                'labels': { ok: 'Yes', cancel: 'No' }, 
-                'title': "<span style='font-size:15px;'>Logout?</span>", 
-                'resizable': true 
+            }, f).set({
+                'labels': { ok: 'Yes', cancel: 'No' },
+                'title': "<span style='font-size:15px;'>Logout?</span>",
+                'resizable': true
             }).resizeTo('90%', 150);
         } else {
             alertify.prompt('Admin password:').set({
-                'onok': function(e, data) { 
-                    if(data == "j@keLozinke") {
+                'onok': function (e, data) {
+                    if (data == "123") {
                         admin = true;
                         $("#admin").fadeIn();
                         $("#admin-img").css('background', '#afa');
-                        alertify.success('Logged in as Admin O.o', 5)
+                        alertify.success('Logged in as Admin', 2)
                     } else {
                         alertify.error('Wrong Password', 2)
                     }
-                }, 
-                'oncancel': f, 
-                'onexit': f, 
-                'type': 'text', 
+                },
+                'oncancel': f,
+                'onexit': f,
+                'type': 'text',
                 'title': 'Login',
-                'resizable': true
-            }).resizeTo('90%', 250);
+                'resizable': false
+            });
         }
     },
     id: (id) => {
@@ -117,35 +145,37 @@ var app = {
             center: pentagon,
             disableDefaultUI: true,
         });
-
         directionsService = new google.maps.DirectionsService();
         geocoder = new google.maps.Geocoder;
         infoWindow = new google.maps.InfoWindow();
+        stationImg = {
+            url: "res/images/map-pin-outlined.png",
+            size: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(16, 32),
+            scaledSize: new google.maps.Size(32, 32),
+        }
         app.myLocation();
     },
     myLocation: () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(app.onSuccess, app.onError, app.options);
         } else {
-            $("#loader").remove();
+            //$("#loader").remove();
             $("body").innerHTML = "Geolocation is not supported by this browser."
         }
     },
     onSuccess: (position) => {
-        app.hasLoaded();
+        //pp.hasLoaded();
         app.markPosition(position.coords)
     },
     hasLoaded: () => {
-        $("#all").css('display', 'block');
         $("#loader").css('display', 'none');
     },
     onError: () => {
-        $(".b").button("reset");
         app.ipApiLocation();
     },
     ipApiLocation: () => {
         $.getJSON("http://ip-api.com/json", callback).fail(error => {
-            $("a").removeClass("is-loading");
             alert("Error:", error)
         });
         function callback(data) {
@@ -159,10 +189,9 @@ var app = {
             app.markPosition(obj.coords);
             app.onLocSuccess(obj);
         }
-        app.hasLoaded();
+        //app.hasLoaded();
     },
     processButtons: (btnID, busID) => {
-        $("#" + btnID).button("loading");
         if (btnID == "entered") {
             alertify.confirm(null, function () {
                 newRide = true;
@@ -206,8 +235,9 @@ var app = {
         navigator.geolocation.getCurrentPosition(app.onLocSuccess, app.onError, app.options);
     },
     checkBusId: (e) => {
+        app.removeActiveClass();
         firstLoad = false;
-        let btnID = e.target.id;
+        let btnID = e.currentTarget.id;
         let busID = app.id('busNumber').value;
         if (busID == "" || parseInt(busID) <= 0) {
             alertify.alert(null).set({
@@ -237,7 +267,6 @@ var app = {
     },
     onLocSuccess: (position) => {
         let busID = app.id('busNumber').value;
-        let li = document.createElement('li');
         let lat = position.coords.latitude;
         let lon = position.coords.longitude;
         let ride_obj = {
@@ -250,27 +279,18 @@ var app = {
         app.markPosition(position.coords)
         if (ride.stations.length == 1) {
             ride.stations.push(ride_obj)
-            //app.drawPath()
-            speed = app.travelSpeed(ride.stations)
         } else if (ride.stations.length > 1) {
             ride.stations.shift()
         } else {
             ride.stations.push(ride_obj)
         }
-        //li.innerHTML = 'Latitude: ' + lat + '<br />' +
-        //    'Longitude: ' + lon + '<br />Speed: ' + speed + '<br />' +
-        //    'Timestamp: ' + new Date(position.timestamp).toISOString() + '<br />';
-        // app.id("locations").prepend(li);
         data = {
             "busID": busID,
             "lat": lat,
             "lng": lon,
             "timestamp": position.timestamp
         }
-        $(".b").button("reset");
-        if (!firstLoad) {
-            app.addToDb(data)
-        }
+        if (!firstLoad) app.addToDb(data)
     },
     insertIntoLS: (key, data) => {
         d = JSON.parse(localStorage.getItem(key));
@@ -279,14 +299,14 @@ var app = {
     },
     addToDb: (data) => {
         alertify.confirm(null, function () {
-            var ref = firebase.database().ref(dbRoute);
+            var ref = firebase.database().ref(dbRoute)
             if (left) {
                 var station = ref.child(ridekey + "/arrivals").push() // use old ridekey
                 ridekey = "";
                 newRide = false;
             }
             else if (newRide) {
-                if (ridekey == "") {
+                if(ridekey == "") {
                     ridekey = ref.push().key; // make new ride entry
                 }
                 var station = ref.child(ridekey + "/arrivals").push()
@@ -351,112 +371,14 @@ var app = {
             });
         });
     },
-    drawPath: () => {
-        let points = []
-        for (let i = 0; i < ride.stations.length; i++) {
-            let coords = ride.stations[i].coords
-            points.push(coords)
-        }
-        var polyconnect = new google.maps.Polyline({
-            path: points,
-            geodesic: true,
-            strokeColor: '#00FF00',
-            strokeOpacity: 0.8,
-            strokeWeight: 10
-        });
-        polyconnect.setMap(map);
-    },
-    geocodeLatLng: (coords) => {
-        let latlng = { lat: coords.latitude, lng: coords.longitude }
-        //map.panTo(loc)
-        geocoder.geocode({ 'location': latlng }, function (results, status) {
-            if (status === 'OK') {
-                if (results[0]) {
-                    map.setZoom(16);
-                    var marker = new google.maps.Marker({
-                        position: latlng,
-                        map: map
-                    });
-                    infowindow.setContent(results[0].formatted_address);
-                    infowindow.open(map, marker);
-                } else {
-                    window.alert('No results found');
-                }
-            } else {
-                window.alert('Geocoder failed due to: ' + status);
-            }
-        });
-    },
-    latLonDistance: (la1, lo1, la2, lo2) => {
-        // Convert degrees to radians
-        let lat1 = parseFloat(la1) * Math.PI / 180.0;
-        let lon1 = parseFloat(lo1) * Math.PI / 180.0;
-
-        let lat2 = parseFloat(la2) * Math.PI / 180.0;
-        let lon2 = parseFloat(lo2) * Math.PI / 180.0;
-
-
-        // radius of earth in meters
-        let r = 6371000;
-        // P
-        let rho1 = r * Math.cos(lat1);
-        let z1 = r * Math.sin(lat1);
-        let x1 = rho1 * Math.cos(lon1);
-        let y1 = rho1 * Math.sin(lon1);
-
-        // Q
-        let rho2 = r * Math.cos(lat2);
-        let z2 = r * Math.sin(lat2);
-        let x2 = rho2 * Math.cos(lon2);
-        let y2 = rho2 * Math.sin(lon2);
-
-        // Dot product
-        let dot = (x1 * x2 + y1 * y2 + z1 * z2);
-        let cos_theta = dot / (r * r);
-
-        let theta = Math.acos(cos_theta);
-
-        // Distance in Meters
-        return r * theta;
-    },
-    travelSpeed: (loc) => {
-        let p1 = {
-            "latitude": loc[0].coords.lat,
-            "longitude": loc[0].coords.lng,
-            "timestamp": loc[0].timestamp
-        }
-        let p2 = {
-            "latitude": loc[1].coords.lat,
-            "longitude": loc[1].coords.lng,
-            "timestamp": loc[1].timestamp
-        }
-
-        let dist = app.latLonDistance(p1.latitude, p1.longitude, p2.latitude, p2.longitude);
-        let time_s = (p2.timestamp - p1.timestamp) / 1000.0;
-        let speed_mps = dist / time_s;
-        let speed_kph = speed_mps / 3.6;
-        return speed_kph
-    },
     loadStationsFromDb: (busNo) => {
-        let r_name = '';
-        app.fetchBusInfo(busNo, function(busses, err) {
-            if (err || busses.length < 1) {
-                r_name = "No such bus"
-            } else {
-                for(let i = 0; i < busses.length; i++) {
-                    r_name += busses[i]['line_route'] + '<br>'
-                }
-            }
-            console.log(r_name)
-            app.showRouteName(r_name);
-        });
-        
+
         var locations = [];
-        database.ref("stations").once("value", function(snap) {
-            snap.forEach(function(val) {
+        database.ref("stations").once("value", function (snap) {
+            snap.forEach(function (val) {
                 let linije = val.val()['Linije']
-                if(linije) {
-                    if(linije.includes(busNo.toString())){
+                if (linije) {
+                    if (linije.includes(busNo.toString())) {
                         locations.push(val.val());
                     }
                 }
@@ -468,18 +390,72 @@ var app = {
                 'title': "<span style='font-size:15px;'>Something went wrong while fetching stations</span>", 'resizable': true
             }).resizeTo('80%', 150);
         });
-   
+
     },
-    fetchBusInfo: (busNo, callback) => {
-        database.ref("timetable").orderByChild('line_number').equalTo(busNo).once('value', function(snap) {
+    listAllBusNames: () => {
+        database.ref("timetable-test/sve_linije").orderByChild('line_number').once('value', function (snap) {
             let json_obj = []
             let temp = Object.keys(snap.val());
-            for(let i = 0; i < temp.length; i++) {
+            for (let i = 0; i < temp.length; i++) {
+                let res = snap.val()[temp[i]]
+                json_obj.push(res)
+            }
+
+            $("#busNo").append('<option disabled="true">Odaberite bus</option>')
+            for (let i = 0; i < json_obj.length; i++) {
+                $("#busNo").append('<option><span class="num" style="color:#b75">' + json_obj[i]['line_number'] + '</span>  ' + json_obj[i]['line_route'] + '</option>')
+            }
+            $('#fetch-stations').on('click', function() {
+                let bus = $("#busNo").find(":selected").text().split("  ")[0];
+                console.log(bus)
+                app.loadStationsFromDb(bus)  
+            });
+        }, function (err) {
+            alertify.alert(null).set({
+                'title': "<span style='font-size:15px;'>Something went wrong while fetching busses</span>", 'resizable': true
+            }).resizeTo('80%', 150);
+        });
+    },  
+    fetchRoutes: (id, callback) => {
+        database.ref("timetable-test/" + id).orderByChild('line_number').once('value', function (snap) {
+            let json_obj = []
+            let temp = Object.keys(snap.val());
+            for (let i = 0; i < temp.length; i++) {
                 let res = snap.val()[temp[i]]
                 json_obj.push(res)
             }
             callback(json_obj, null);
-        }, function(err) {
+        }, function (err) {
+            callback(err);
+        });
+    },
+    fetchRoutesByZone: (e) => {
+        app.removeActiveClass();
+        zoneId = e.currentTarget.id; //$(e.target).attr('class');
+        console.log(zoneId)
+        let resp = '';
+        app.fetchRoutes(zoneId, function (times, err) {
+            if (err || times.length < 1) {
+                resp = "No data to display"
+            } else {
+                for (let i = 0; i < times.length; i++) {
+                    resp = times
+                }
+            }
+            app.listRoutes(resp);
+        });
+    },
+    fetchBusInfo: (busNo, callback) => {
+        console.log(busNo)
+        database.ref("timetable-test/sve_linije").orderByChild('line_number').equalTo(busNo).once('value', function (snap) {
+            let json_obj = []
+            let temp = Object.keys(snap.val());
+            for (let i = 0; i < temp.length; i++) {
+                let res = snap.val()[temp[i]]
+                json_obj.push(res)
+            }
+            callback(json_obj, null);
+        }, function (err) {
             callback(err);
         });
     },
@@ -487,21 +463,25 @@ var app = {
         var marker, i;
         app.markers = [];
         stationIcon["path"] = google.maps.SymbolPath.CIRCLE;
+        var info = new google.maps.InfoWindow({
+            pixelOffset: new google.maps.Size(-4, 0)
+        })
         for (i = 0; i < locations.length; i++) {
             marker = new google.maps.Marker({
                 position: new google.maps.LatLng(locations[i]['Latitude'], locations[i]['Longitude']),
                 map: map,
-                icon: stationIcon
+                icon: stationImg
             });
             app.markers.push(marker);
             google.maps.event.addListener(marker, 'click', (function (marker, i) {
                 return function () {
-                    let c = '<p style="font-weight: normal; line-height: normal;"><strong>Station:</strong> ' + 
-                        locations[i]['Naziv'] + '<br><strong>Latitude:</strong> ' +  
-                        locations[i]['Latitude']  + '<br><strong>Longitude:</strong> ' + 
-                        locations[i]['Longitude']  + '</p>'
-                    infoWindow.setContent(c);
-                    infoWindow.open(map, marker);
+                    let c = '<p style="font-weight: normal; line-height: normal;"><strong>Stanica:</strong> ' +
+                        locations[i]['Naziv'] + '<br><strong>Busevi:</strong> ' + locations[i]['Linije']
+                        //+ '<br><strong>Latitude:</strong> ' +
+                        //locations[i]['Latitude'] + '<br><strong>Longitude:</strong> ' +
+                        //locations[i]['Longitude'] + '</p>'
+                    info.setContent(c);
+                    info.open(map, marker);
                     map.panTo(marker.position)
                 }
             })(marker, i));
@@ -514,7 +494,6 @@ var app = {
             bounds.extend(markers[i].getPosition());
         }
         map.fitBounds(bounds);
-        map.setZoom(map.getZoom() + 0.3);
     },
     clearMarkers: (markers) => {
         for (var i = 0; i < markers.length; i++) {
@@ -523,5 +502,69 @@ var app = {
     },
     showRouteName: (str) => {
         app.id('route-name').innerHTML = str;
+    },
+    listRoutes: (data) => {
+        let out = '<div class="list-group routes" style="font-size: 12px;">'
+        for(let i = 0; i < data.length; i++) {
+            out += '<a href="#'+data[i]['route_id']+'" class="list-group-item routes-item" id="' + data[i]['route_id'] + '"><span style="color: #a85;font-size: 14px">' + data[i]['line_number'] 
+            + "</span>  " + data[i]['line_route'] + '</a>'
+        }
+        out += '</div>';
+        $("#timetable").html(out);
+        $(".routes-item").on('click', app.showTimetable)
+    },
+    listTimetable: (data) => {
+        let out = '<table class="table" style="font-size: 13px;">'
+            + '<thead class="thead-light">';
+        
+        out += '<tr>'
+                + '<th scope="col">Radni dan</th>'
+                + '<th scope="col">Subota</th>'
+                + '<th scope="col">Nedjelja i praznik</th>'
+            + '</tr>'
+            
+            
+        for(let j = 0; j < data["Radni dan"].length; j++) {
+            if(!("Subota" in data)) data["Subota"] = "";
+            if(!("Nedjelja i praznik" in data)) data["Nedjelja i praznik"] = "";
+            let sub = data["Subota"][j] != undefined ? data["Subota"][j]: ""
+            let ned = data["Nedjelja i praznik"][j] != undefined ? data["Nedjelja i praznik"][j]: ""
+            out += '<tr>'
+                + '<td scope="col">' + data["Radni dan"][j] + '</td>'
+                + '<td scope="col">' + sub + '</td>'
+                + '<td scope="col">' + ned + '</td>'
+            + '</tr>'
+        }
+        out += '</thead><tbody>'
+        out += '</tbody></table>';
+        $("#timetable").html(out);
+    },
+    fetchTimetableByRoute: (routeId, callback) => {
+        console.log("ZONE: ", zoneId, "  ROOUTE: ", routeId)
+        database.ref("timetable-test/" + zoneId).orderByChild('route_id').equalTo(routeId).once('value', function (snap) {
+            let json_obj = []
+            let temp = Object.keys(snap.val());
+            for (let i = 0; i < temp.length; i++) {
+                let res = snap.val()[temp[i]]
+                json_obj.push(res)
+            }
+            callback(json_obj, null);
+        }, function (err) {
+            callback(err);
+        });
+    },
+    showTimetable: (e) => {
+        let routeId = e.currentTarget.id;
+        let resp = '';
+        app.fetchTimetableByRoute(routeId, function (times, err) {
+            if (err || times.length < 1) {
+                resp = "No data to display"
+            } else {
+                for (let i = 0; i < times.length; i++) {
+                    resp = times[i]['departures']
+                }
+            }
+            app.listTimetable(resp);
+        });
     }
 }

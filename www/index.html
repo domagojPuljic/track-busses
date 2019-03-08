@@ -5,19 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
 
-    <script src="js/jquery-3.1.1.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/alertify.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/alertify.css">
-    <link rel="stylesheet" href="css/themes/semantic.css">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
     <title>Blank App</title>
 </head>
 
 <body>
-    <div id="loader"></div>
+    <!--<div id="loader"></div>-->
     <div class="wrapper">
         <nav id="sidebar">
             <div class="sidebar-header">
@@ -26,39 +26,39 @@
             <ul class="list-unstyled components">
                 <p style="text-align:center;">Dobrodošli</p>
                 <li class="active">
-                    <a href="#">Početna</a>
+                    <a href="#main-page">Početna</a>
                 </li>
                 <li>
                     <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">Vozni red</a>
                     <ul class="collapse list-unstyled" id="pageSubmenu">
                         <li>
-                            <a href="#">Grad Split</a>
+                            <a href="#times-page" id="grad_split">Grad Split</a>
                         </li>
                         <li>
-                            <a href="#">Urbano područje</a>
+                            <a href="#times-page" id="urbano_podrucje">Urbano područje</a>
                         </li>
                         <li>
-                            <a href="#">Prigradsko područje</a>
+                            <a href="#times-page" id="prigradsko_podrucje">Prigradsko područje</a>
                         </li>
                         <li>
-                            <a href="#">Trogir</a>
+                            <a href="#times-page" id="trogir">Trogir</a>
                         </li>
                         <li>
-                            <a href="#">Otok Šolta</a>
+                            <a href="#times-page" id="otok_solta">Otok Šolta</a>
                         </li>
                         <li>
-                            <a href="#">Sve</a>
+                            <a href="#times-page" id="sve_linije">Sve</a>
                         </li>
                     </ul>
                 </li>
                 <li>
-                    <a href="#">Kontakt</a>
+                    <a href="#map-page">Karta</a>
                 </li>
                 <li id="admin">
                     <small class="text-secondary">Admin area:</small>
                     <input id="busNumber" type="number" placeholder="Bus No."><br>
                     <button id="entered" type="button" class="b btn btn-sm btn-outline-info">Entered</button>
-                    <button id="left" type="button" class="b btn  btn-sm btn-outline-info" >Left</button><br>
+                    <button id="left" type="button" class="b btn btn-sm btn-outline-info" >Left</button><br>
                     <button id="station" type="button" class="b btn btn-sm btn-outline-info">Station</button>
                     <button id="all-stations" type="button" class="b btn  btn-sm btn-outline-info">All</button>
                 </li>
@@ -70,15 +70,60 @@
 
         <div id="content">
             <nav class="navbar navbar-light">
-                <div class="container-fluid" style="margin-left: -10px;">
+                <div class="container-fluid">
                     <div id="sidebarCollapse">
-                        <img id="menu" src="res/svg/si-glyph-arrow-right.svg" style="width:25px;height:25px"/>
+                        <img id="menu" src="res/svg/si-glyph-dial-number.svg" style="width:25px;height:25px"/>
                     </div>
                 </div>
             </nav>
+            <div data-role="page" id="main-page">
+                <div data-role="none" class="header">Promet Split</div>
+                <div role="main" class="images-slideshow">
+                    <img class="slides img-responsive" src="res/images/cover1.png">
+                    <img class="slides img-responsive" src="res/images/cover2.jpg">
+                    <img class="slides img-responsive" src="res/images/cover3.jpg">
+                    
+                    <div class="container-fluid" style="margin-top:20px;">
+                        <div class="info">Dobrodošli na mobilnu aplikaciju koja daje informacije o redu vožnje autobusa Promet Split, te dodatne informacije o stanicama i autobusnim rutama.</div>
+                        <p>Brzi linkovi: </p>
+                        <a href="#map-page"><button data-role="none" type="button" class="btn btn-outline-info col-5">Mapa stanica</button></a>
+                        <a href="#times-page"><button data-role="none" type="button" class="btn btn-outline-info col-5">Vozni red</button></a>
+                    </div>
+                </div>
+            </div>
+            <div data-role="page" id="map-page">
+                <div data-role="none" class="header">Karta stanica</div>
+                <div role="main" class="ui-content">
+                    <div id="choose-bus row" style="margin: 15px 0;">
+                        <select data-role="none" id="busNo" class="col-8"></select>
+                        <button id="fetch-stations"class="btn btn-outline-info col-3">Prikaži</button>
+                    </div>
+                    <div id="map"></div>
+                    <div id="route-name"></div>
+                </div>
+            </div>
+            <div data-role="page" id="times-page">
+                <div data-role="none" class="header">Timetable</div>
+                <div role="main" class="ui-content">
+                    <ul>
+                        <li class="row">
+                            <a href="#times-page" class="col-6" id="grad_split">Grad Split</a>
+                            <a href="#times-page" class="col-6" id="urbano_podrucje">Urbano područje</a>
+                        </li>
+                        <li class="row">
+                            <a href="#times-page" class="col-6" id="prigradsko_podrucje">Prigradsko područje</a>
+                            <a href="#times-page" class="col-6" id="trogir">Trogir</a>
+                        </li>
+                        <li class="row">
+                            <a href="#times-page" class="col-6" id="otok_solta">Otok Šolta</a>
+                            <a href="#times-page" class="col-6" id="sve_linije" style="color: rgb(153, 22, 22)">Sve linije</a>
+                        </li>
+                    </ul>          
+                    <div id="timetable">
 
-            <div id="map"></div>
-            <div id="route-name"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="cordova.js"></script>

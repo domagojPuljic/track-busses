@@ -1,10 +1,10 @@
 {
   "background_color": "#FFF",
   "display": "standalone",
-  "name": "Track Busses",
-  "short_name": "Track Busses",
+  "name": "Promet Split",
+  "short_name": "Promet Split",
   "version": "com.phonegap.bus",
-  "description": "** Track Busses **",
+  "description": "** Promet Split **",
   "author": "Domagoj Puljic",
   "icons": [],
   "start_url": "index.html"

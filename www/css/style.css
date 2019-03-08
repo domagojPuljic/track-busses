@@ -8,7 +8,15 @@ html, body {
     text-align: center;
     box-sizing: border-box;
 }
-
+a {
+    text-decoration: none;
+}
+.info {
+    background-color: #ddddff;
+    border-left: 6px solid #439afd;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
 /* SIDEBAR */
 .wrapper {
     font-family: mojfont, 'serif';
@@ -19,11 +27,13 @@ html, body {
     display: flex;
     align-items: stretch;
 }
+
 #content {
     color: #000;
 }
 #sidebar {
     position: relative;
+    z-index: 20;
     min-width: 200px;
     max-width: 200px;
     min-height: 100vh;
@@ -65,9 +75,20 @@ a[data-toggle="collapse"] {
 }
 #sidebarCollapse {
     z-index: 20;
+    padding: 5px 10px;
+    padding-top: 3px;
+    margin-top: -5px;
+    margin-left: -25px;
+    background-color: rgb(255, 245, 226);
+    border: 1px solid rgb(136, 136, 136);
+    border-radius: 20px;
 }
 #menu {
     transition: all .3s;
+}
+#pageSubmenu > li a {
+    width: 100%;
+    color: rgb(150, 52, 28);
 }
 #admin > * {
     margin: 1%;
@@ -98,9 +119,17 @@ input[type="number"] {
     width: 82%;
     border: 1px solid #17a2b8;
 }
+#busNo {
+    height: 35px;
+    font-size: 14px;
+    border: none;
+    border: 1px solid rgb(67, 156, 201);
+    border-radius: 2px;
+    background: none;
+}
 .col > * {
     width: 100%;
-    font-size: 11px;
+    font-size: 12px;
     box-shadow: 0 0 6px 0#aaa;
     border-radius: 0;
 }
@@ -129,8 +158,8 @@ input[type="number"] {
 ul li {
     list-style-type: none;
     border-bottom: 1px solid #888;
-    padding: 10px 0;
-    font-size: 10px;
+    padding: 15px 0;
+    font-size: 12px;
     line-height: 12px;
 }
 ul {
@@ -144,9 +173,38 @@ ul li:last-child {
     padding: 0 5px;
     margin: 15px 0;
 }
+.images-slideshow {
+    max-width: 100%;
+    min-width: 100%;
+    height: auto;
+}
+.images-slideshow img {
+    max-width: 100%;
+    min-width: 100%;
+    height: auto;
+}
+.slides {
+    padding: 0;
+    display: none;
+}
+.ui-content {
+    height:100%;
+    padding: 0; 
+    margin: 0;
+}
+[data-role="page"] {
+    height: 100%;
+}
+.header {
+    height: 50px;
+    box-shadow: inset 0 0 10px #aaa;
+    background: rgb(255, 241, 160);
+    padding: 10px;
+}
 #map {
-    position: absolute;
+    position: relative;
     top: 0;
+    left: 0;
     z-index: 10;
     height: 100%;
     width: 100%;
@@ -175,6 +233,7 @@ ul li:last-child {
     border-right: 1px solid #000;
     border-radius: 50%;
     animation: rot 0.7s linear infinite;
+    display:none;
 }
 
 @-webkit-keyframes rot { 
